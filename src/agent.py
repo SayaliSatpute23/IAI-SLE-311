@@ -1,27 +1,32 @@
 import os
-from openai import OpenAI
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("OLLAMA_API_KEY"),
-    base_url="https://ollama.com/v1"
-)
-
+API_KEY = os.getenv("OLLAMA_API_KEY")
+URL = "https://ollama.com/v1/chat/completions"
 
 def run_agent(user_input):
-    response = client.chat.completions.create(
-        model="gpt-oss:20b",
-        messages=[
-            {
-                "role": "user",
-                "content": user_input
-            }
-        ]
+    response = requests.post(
+        URL,
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "gpt-oss:20b",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
+        }
     )
-    return response.choices[0].message.content
 
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
 def main():
     print("===== BASIC AI AGENT =====")
@@ -36,7 +41,6 @@ def main():
 
         answer = run_agent(user_input)
         print("Agent:", answer)
-
 
 if __name__ == "__main__":
     main()
